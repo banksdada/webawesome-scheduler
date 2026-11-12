@@ -1,0 +1,9 @@
+# Only flag real errors (E = style errors, F = unused/undefined names)
+line-length = 120
+
+[lint]
+select = ["E", "F"]
+
+[lint.per-file-ignores]
+# main.py imports models/routers after the database engine exists on purpose
+"main.py" = ["E402"]

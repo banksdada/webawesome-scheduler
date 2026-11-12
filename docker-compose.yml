@@ -1,0 +1,21 @@
+# For running everything on your own computer:  docker compose up --build
+# (Coolify does not use this file - see README for the Coolify steps.)
+services:
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+
+  ui:
+    build:
+      context: .
+      dockerfile: packages/ui/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
