@@ -1,29 +1,37 @@
-# WebAwesome Scheduler
+# WebAwesome Scheduler - Job Scheduling & Dispatch
 
-Job management for cleaning and pest-control businesses. FastAPI (Python) API + Next.js website.
+Book jobs, assign them to technicians, see the week on a calendar, and let technicians work their jobs from a phone.
+FastAPI (Python) API + Next.js website.
 
-## What works today
+## What it does
 
-| Feature | Status |
+| | |
 |---|---|
-| Login (token) | Working, **demo only** - see "Before real use" |
-| Customers (add, view, list) | Working |
-| Jobs (add, view, list) | Working |
-| Quotes (HTML preview) | Working; PDF download is a stub |
-| Website | Starter page only (shows whether the API is reachable) |
-| Invoicing, calendar, technicians, live updates | **Not built yet** (switched off) |
+| **Accounts** | A business signs up and becomes its own private workspace. Roles: **admin** (office) and **technician**. Passwords are hashed. |
+| **Customers** | Admin adds customers (name, phone, address, notes). |
+| **Jobs** | Admin creates a job for a customer with a date/time and length. |
+| **Dispatch** | Admin assigns a technician. A clash warning appears if that technician is already booked (admin can still save anyway). The technician is **emailed** when a job is assigned or its time changes. |
+| **Week calendar** | Admin sees the week, can filter by technician, and sees jobs that still need a time. |
+| **Technician phone view** | "My jobs": only their own jobs, with call and Maps links, and **Start job** / **Mark as done** buttons. |
+| **Quotes** | Admin can open a simple printable quote for a job. |
+
+One business can never see another business's data (this is tested).
+
+## Not built yet
+
+SMS notifications, invoicing and payments, recurring jobs, route maps, password reset, email verification, customer-facing booking, and billing for your own subscribers. Login has no rate limiting yet.
 
 ## Run on your computer
 
 ```bash
 cp .env.template .env
 docker compose up --build
-# API: http://localhost:8000/docs     Website: http://localhost:3000
+# Website: http://localhost:3000     API docs: http://localhost:8000/docs
 ```
 
 ## Deploy on Coolify
 
-Create **two** applications from this GitHub repo (one for the API, one for the website). For each:
+Create a **PostgreSQL database** and **two applications** from this GitHub repo (branch `main`):
 
 | Setting | API | Website |
 |---|---|---|
@@ -32,16 +40,11 @@ Create **two** applications from this GitHub repo (one for the API, one for the 
 | Dockerfile location | `/packages/api/Dockerfile` | `/packages/ui/Dockerfile` |
 | Port | `8000` | `3000` |
 
-Environment variables:
-- **API:** `SECRET_KEY` (long random text), `DATABASE_URL` (a Coolify PostgreSQL database), `CORS_ORIGINS` (the website's address, e.g. `https://scheduler.yourdomain.com`).
-- **Website:** `NEXT_PUBLIC_API_URL` = the API's address. Tick **Build Variable** for it - the website is built with this value, so changing it needs a redeploy.
+**API variables:** `SECRET_KEY` (long random text), `DATABASE_URL` (the database's internal URL), `CORS_ORIGINS` (the website's address, e.g. `https://scheduler.yourdomain.com`), and optionally the `SMTP_*` email settings.
+
+**Website variable:** `NEXT_PUBLIC_API_URL` = the API's address. Tick **Build Variable** - the website is built with this value, so changing it needs a redeploy.
 
 Health check: `GET /health` on the API returns `{"status":"ok"}`.
-
-## Before real use
-
-- Login accepts the password `password` for any existing user, and there is no sign-up screen yet. Replace this with real password hashing before putting real customer data in.
-- The default database is a file inside the container. Use PostgreSQL in Coolify.
 
 ## Tests
 

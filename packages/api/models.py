@@ -1,74 +1,60 @@
-"""SQLModel data models for the Quick‑Stack API.
+"""Database tables.
 
-- `User` – minimal auth holder (email, hashed password placeholder).
-- `Customer` – a business client.
-- `Job` – scheduling entry, linked to a `Customer`.
+Everything belongs to an Organisation (one business using the tool).
+A User is either an "admin" (office / owner) or a "technician" (does the jobs).
 """
 
+from datetime import datetime, timezone
 from typing import Optional
-from sqlalchemy import Column, JSON
-from sqlmodel import Field, SQLModel, Relationship
+
+from sqlmodel import Field, SQLModel
+
+
+def utcnow() -> datetime:
+    """Current time in UTC, stored without a timezone label."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+class Organisation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    created_at: datetime = Field(default_factory=utcnow)
+
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    org_id: int = Field(foreign_key="organisation.id", index=True)
     email: str = Field(index=True, unique=True)
-    # In a demo we store a plain‑text password; replace with a hash in prod.
-    password: str
+    name: str
+    phone: Optional[str] = None
+    role: str = "technician"  # "admin" or "technician"
+    password_hash: str
+    active: bool = True
 
-    # optional relationship to customers they own (not used now)
-    customers: list["Customer"] = Relationship(back_populates="owner")
 
 class Customer(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    org_id: int = Field(foreign_key="organisation.id", index=True)
     name: str
     email: Optional[str] = None
     phone: Optional[str] = None
-    owner_id: Optional[int] = Field(foreign_key="user.id")
-
-    owner: Optional[User] = Relationship(back_populates="customers")
-    jobs: list["Job"] = Relationship(back_populates="customer")
-
-    # extra fields for the job‑management use case
     address: Optional[str] = None
-    service_type: Optional[str] = None
-    preferred_schedule: Optional[str] = None  # e.g., "Mon-Fri 9-5"
-
-    # add notes about recurring jobs, etc.
     notes: Optional[str] = None
+
 
 class Job(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    org_id: int = Field(foreign_key="organisation.id", index=True)
+    customer_id: int = Field(foreign_key="customer.id", index=True)
     title: str
     description: Optional[str] = None
-    scheduled_at: Optional[str] = None  # iso‑datetime string for demo
-    status: str = Field(default="pending")
-
-    customer_id: int = Field(foreign_key="customer.id")
-    customer: Customer = Relationship(back_populates="jobs")
-
-    # technician assignment (can be null until assigned)
-    technician_id: Optional[int] = Field(foreign_key="technician.id", default=None)
-    technician: Optional["Technician"] = Relationship(back_populates="jobs")
-
-    # scheduling preferences
-    preferred_time: Optional[str] = None
-    notes: Optional[str] = None
-
-    # extra fields for quotes / invoicing
+    # pending -> assigned -> in_progress -> done   (or cancelled)
+    status: str = "pending"
+    scheduled_start: Optional[datetime] = Field(default=None, index=True)  # stored as UTC
+    duration_minutes: int = 60
+    assigned_to_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True)
     price_estimate: Optional[float] = None
-    deposit_paid: Optional[float] = None
-
-class Technician(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-    email: str = Field(index=True)
-    phone: Optional[str] = None
-
-    # relationship to jobs they handle
-    jobs: list[Job] = Relationship(back_populates="technician")
-
-    # skills / certifications (simple list as JSON)
-    skills: Optional[list[str]] = Field(default=None, sa_column=Column(JSON))
-
-    # availability schedule (simple JSON)
-    availability: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    notes: Optional[str] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=utcnow)
