@@ -5,6 +5,7 @@ import {
   addDays, api, fromLocalInput, sameDay, startOfDay, startOfWeek, timeOf, toLocalInput,
 } from "../lib/api";
 import { useSession } from "../lib/useSession";
+import Icon from "../components/Icon";
 
 const EMPTY_JOB = { customer_id: "", title: "", notes: "", when: "", duration_minutes: 60, assigned_to_id: "", price_estimate: "" };
 
@@ -78,7 +79,7 @@ function JobForm({ customers, techs, initial, onSave, onCancel, onCancelJob, onQ
 }
 
 export default function Schedule() {
-  const { ready } = useSession({ role: "admin" });
+  const { ready, session } = useSession({ role: "admin" });
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [techFilter, setTechFilter] = useState("");
   const [jobs, setJobs] = useState([]);
@@ -193,6 +194,24 @@ export default function Schedule() {
       }
     : EMPTY_JOB;
 
+  const live = jobs.filter((j) => j.status !== "cancelled");
+  const doneCount = live.filter((j) => j.status === "done").length;
+  const estimate = live.reduce((sum, j) => sum + (Number(j.price_estimate) || 0), 0);
+  const perDay = days.map((d) => live.filter((j) => j.scheduled_start && sameDay(new Date(j.scheduled_start), d)).length);
+  const busiest = Math.max(1, ...perDay);
+
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName = session?.name ? session.name.split(" ")[0] : "";
+  const todayJobs = live.filter((j) => j.scheduled_start && sameDay(new Date(j.scheduled_start), today));
+  const todayDone = todayJobs.filter((j) => j.status === "done").length;
+  const dayLine =
+    todayJobs.length === 0
+      ? "Nothing booked for today. A good moment to plan the week."
+      : todayDone === todayJobs.length
+        ? `All ${todayJobs.length} of today's jobs are done. Nice work, team.`
+        : `${todayJobs.length} ${todayJobs.length === 1 ? "job" : "jobs"} today, ${todayDone} done so far.`;
+
   const initials = (n) => n.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const card = (j) => (
     <div key={j.id} className={`job ${j.status}`} onClick={() => openPanel(j)}>
@@ -212,7 +231,22 @@ export default function Schedule() {
   return (
     <>
       <div className="pagehead"><h1>Schedule</h1><span className="range">{rangeLabel}</span></div>
+      <p className="hello"><strong>{greet}{firstName ? `, ${firstName}` : ""}.</strong> {dayLine}</p>
       {error && <div className="error">{error}</div>}
+      <div className="stats">
+        <div className="stat"><span className="ico spruce"><Icon name="calendar" /></span><div><b>{live.length}</b><span>jobs this week</span></div></div>
+        <div className="stat"><span className="ico moss"><Icon name="check" /></span><div><b>{doneCount}</b><span>done</span></div></div>
+        <div className="stat"><span className="ico signal"><Icon name="inbox" /></span><div><b>{unscheduled.length}</b><span>need a time</span></div></div>
+        <div className="stat"><span className="ico blue"><Icon name="pound" /></span><div><b>£{estimate.toLocaleString("en-GB", { maximumFractionDigits: 0 })}</b><span>estimated value</span></div></div>
+        <div className="stat bars">
+          <div className="barchart" role="img" aria-label={`Jobs per day this week: ${perDay.join(", ")}`}>
+            {perDay.map((n, i) => (
+              <span key={i} className={sameDay(days[i], today) ? "on" : ""} style={{ height: `${Math.max(8, (n / busiest) * 100)}%` }} title={`${days[i].toLocaleDateString("en-GB", { weekday: "short" })}: ${n}`} />
+            ))}
+          </div>
+          <span className="cap">jobs per day</span>
+        </div>
+      </div>
       <div className="toolbar">
         <button className="secondary" onClick={() => setWeekStart(addDays(weekStart, -7))}>Previous</button>
         <button className="secondary" onClick={() => setWeekStart(startOfWeek(new Date()))}>This week</button>
@@ -259,7 +293,7 @@ export default function Schedule() {
       </div>
 
       <h2>Needs a time</h2>
-      {unscheduled.length === 0 ? <p className="muted">Every job has a time.</p> : <div className="week" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>{unscheduled.map(card)}</div>}
+      {unscheduled.length === 0 ? <p className="muted emptynote"><Icon name="check" size={18} /> Every job has a time.</p> : <div className="week" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>{unscheduled.map(card)}</div>}
     </>
   );
 }

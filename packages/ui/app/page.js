@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession } from "./lib/api";
+import Icon from "./components/Icon";
+import Spot from "./components/Spot";
 
 const STEPS = [
   { title: "Book the job", text: "Pick the customer, set the time and how long it should take. Add access notes the technician will need on the doorstep." },
@@ -12,18 +14,18 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { title: "Week board", text: "Every job for the week in one view, filtered by technician when you want to focus on one person." },
-  { title: "Clash warnings", text: "Double-booking a technician is caught as you schedule, so you can move the job or override it on purpose." },
-  { title: "Technician phone view", text: "Today's jobs first, with the address, a call button, directions, access notes and a big Start button." },
-  { title: "Email when it changes", text: "Technicians are emailed when a job is assigned to them or moved, so nobody is working from an old message." },
-  { title: "Customer records", text: "Names, phone numbers, addresses and notes like pets or parking, kept with the customer and shown on every job." },
-  { title: "Quote from the job", text: "Add a price estimate to a job and open a clean, printable quote for the customer." },
+  { icon: "board", title: "Week board", text: "Every job for the week in one view, filtered by technician when you want to focus on one person." },
+  { icon: "alert", title: "Clash warnings", text: "Double-booking a technician is caught as you schedule, so you can move the job or override it on purpose." },
+  { icon: "phone", title: "Technician phone view", text: "Today's jobs first, with the address, a call button, directions, access notes and a big Start button." },
+  { icon: "mail", title: "Email when it changes", text: "Technicians are emailed when a job is assigned to them or moved, so nobody is working from an old message." },
+  { icon: "contact", title: "Customer records", text: "Names, phone numbers, addresses and notes like pets or parking, kept with the customer and shown on every job." },
+  { icon: "quote", title: "Quote from the job", text: "Add a price estimate to a job and open a clean, printable quote for the customer." },
 ];
 
 const WHO = [
-  { title: "Cleaning and pest control", text: "Crews moving between homes and sites all day, with different jobs for different people." },
-  { title: "Home care and support", text: "Visits that need the right person at the right address, at the right time." },
-  { title: "Any team that visits customers", text: "If someone has to turn up somewhere, the board shows who, where and when." },
+  { icon: "sparkle", title: "Cleaning and pest control", text: "Crews moving between homes and sites all day, with different jobs for different people." },
+  { icon: "users", title: "Home care and support", text: "Visits that need the right person at the right address, at the right time." },
+  { icon: "pin", title: "Any team that visits customers", text: "If someone has to turn up somewhere, the board shows who, where and when." },
 ];
 
 function BoardMock() {
@@ -40,6 +42,8 @@ function BoardMock() {
   );
   return (
     <div className="mk-mock" aria-hidden="true">
+      <div className="mk-chip warn"><Icon name="alert" size={16} />Sam is already booked at 09:00</div>
+      <div className="mk-chip ok"><Icon name="mail" size={16} />Email sent to Priya</div>
       <div className="mk-board">
         <div className="day">{head("Mon", 9)}{job("08:30", "Deep clean, 3 bed", "Mrs Okafor", "Sam Rivera")}{job("13:00", "Wasp nest removal", "Hartley Dental", "Priya Nair")}</div>
         <div className="day today">{head("Tue", 10)}{job("09:00", "Weekly office clean", "Northgate Surgery", "Sam Rivera", "in_progress")}{job("14:30", "Morning visit", "Mr Bell", "Priya Nair")}</div>
@@ -89,6 +93,17 @@ export default function Home() {
         <BoardMock />
       </section>
 
+      <section className="mk-warm">
+        <Spot kind="team" />
+        <div>
+          <h2>Less chasing. More getting on with the day.</h2>
+          <p>
+            Everyone knows where they're going next, so there are fewer "what time am I there?" texts and fewer notes on the back of an envelope.
+            Your team opens their phone and sees the job. You open the board and see the week. That's a calmer day for all of you.
+          </p>
+        </div>
+      </section>
+
       <section className="mk-section">
         <h2>How a job moves through your day</h2>
         <ol className="mk-steps">
@@ -107,6 +122,7 @@ export default function Home() {
         <div className="mk-features">
           {FEATURES.map((f) => (
             <div key={f.title} className="mk-feature">
+              <span className="mk-ico"><Icon name={f.icon} size={22} /></span>
               <h3>{f.title}</h3>
               <p>{f.text}</p>
             </div>
@@ -118,7 +134,8 @@ export default function Home() {
         <h2>Made for teams that go to the customer</h2>
         <div className="mk-who">
           {WHO.map((w) => (
-            <div key={w.title}>
+            <div key={w.title} className="mk-whocard">
+              <span className="mk-ico alt"><Icon name={w.icon} size={22} /></span>
               <h3>{w.title}</h3>
               <p>{w.text}</p>
             </div>

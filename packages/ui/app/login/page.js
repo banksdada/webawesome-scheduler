@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, saveSession } from "../lib/api";
+import AuthShell from "../components/AuthShell";
 
 export default function Login() {
   const router = useRouter();
@@ -27,7 +28,8 @@ export default function Login() {
   }
 
   return (
-    <form className="card narrow" onSubmit={submit}>
+    <AuthShell>
+    <form className="card" onSubmit={submit}>
       <h1>Log in</h1>
       <label>Email</label>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
@@ -37,5 +39,6 @@ export default function Login() {
       <p><button disabled={busy}>{busy ? "Logging in..." : "Log in"}</button></p>
       <p className="muted">New business? <Link href="/signup">Create an account</Link></p>
     </form>
+    </AuthShell>
   );
 }

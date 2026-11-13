@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, saveSession } from "../lib/api";
+import AuthShell from "../components/AuthShell";
 
 export default function Signup() {
   const router = useRouter();
@@ -27,7 +28,8 @@ export default function Signup() {
   }
 
   return (
-    <form className="card narrow" onSubmit={submit}>
+    <AuthShell>
+    <form className="card" onSubmit={submit}>
       <h1>Create your account</h1>
       <label>Business name</label>
       <input value={f.organisation_name} onChange={set("organisation_name")} required />
@@ -41,5 +43,6 @@ export default function Signup() {
       <p><button disabled={busy}>{busy ? "Creating..." : "Create account"}</button></p>
       <p className="muted">Already have an account? <Link href="/login">Log in</Link></p>
     </form>
+    </AuthShell>
   );
 }
