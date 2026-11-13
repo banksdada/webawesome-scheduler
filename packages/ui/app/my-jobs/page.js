@@ -9,24 +9,29 @@ function JobCard({ job, onAction, busy }) {
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.customer.address)}`
     : null;
   return (
-    <div className="jobcard">
+    <div className={`jobcard ${job.status}`}>
+      <div className="when">
+        <span className="t">{job.scheduled_start ? timeOf(job.scheduled_start) : "No time"}</span>
+        <span className="d">
+          {job.scheduled_start ? dayLabel(new Date(job.scheduled_start)) : ""} · {job.duration_minutes} min
+        </span>
+        {job.status !== "assigned" && <span className={`badge ${job.status}`}>{job.status.replace("_", " ")}</span>}
+      </div>
       <h3>{job.title}</h3>
-      <div>
-        {job.scheduled_start ? `${dayLabel(new Date(job.scheduled_start))}, ${timeOf(job.scheduled_start)}` : "No time set"} ·{" "}
-        {job.duration_minutes} min <span className="badge">{job.status.replace("_", " ")}</span>
-      </div>
-      <p style={{ margin: ".5rem 0 0" }}><strong>{job.customer.name}</strong></p>
-      {job.customer.address && <div>{job.customer.address}</div>}
-      <div>
-        {job.customer.phone && <a className="action" href={`tel:${job.customer.phone}`}>Call {job.customer.phone}</a>}
-        {maps && <a className="action" href={maps} target="_blank" rel="noreferrer">Open in Maps</a>}
-      </div>
-      {job.notes && <p className="muted">Notes: {job.notes}</p>}
+      <div><strong>{job.customer.name}</strong></div>
+      {job.customer.address && <div className="addr">{job.customer.address}</div>}
+      {(job.customer.phone || maps) && (
+        <div className="actions">
+          {job.customer.phone ? <a href={`tel:${job.customer.phone}`}>Call</a> : <span />}
+          {maps ? <a href={maps} target="_blank" rel="noreferrer">Directions</a> : <span />}
+        </div>
+      )}
+      {job.notes && <div className="note">{job.notes}</div>}
       {job.status === "assigned" && (
         <button className="big" disabled={busy} onClick={() => onAction(job, "start")}>Start job</button>
       )}
       {job.status === "in_progress" && (
-        <button className="big" disabled={busy} onClick={() => onAction(job, "complete")}>Mark as done</button>
+        <button className="big finish" disabled={busy} onClick={() => onAction(job, "complete")}>Mark as done</button>
       )}
     </div>
   );
@@ -77,7 +82,7 @@ export default function MyJobs() {
   const overdue = mine.filter((j) => open(j) && new Date(j.scheduled_start) < startOfDay(today));
 
   return (
-    <>
+    <div className="phone">
       <h1>My jobs</h1>
       {error && <div className="error">{error}</div>}
       {overdue.length > 0 && (
@@ -90,6 +95,6 @@ export default function MyJobs() {
       {todays.length === 0 ? <p className="muted">Nothing booked for today.</p> : todays.map((j) => <JobCard key={j.id} job={j} onAction={act} busy={busy} />)}
       <h2>Coming up</h2>
       {upcoming.length === 0 ? <p className="muted">No upcoming jobs.</p> : upcoming.map((j) => <JobCard key={j.id} job={j} onAction={act} busy={busy} />)}
-    </>
+    </div>
   );
 }

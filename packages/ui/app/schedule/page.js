@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  addDays, api, dayLabel, fromLocalInput, sameDay, startOfDay, startOfWeek, timeOf, toLocalInput,
+  addDays, api, fromLocalInput, sameDay, startOfDay, startOfWeek, timeOf, toLocalInput,
 } from "../lib/api";
 import { useSession } from "../lib/useSession";
 
@@ -193,27 +193,35 @@ export default function Schedule() {
       }
     : EMPTY_JOB;
 
+  const initials = (n) => n.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const card = (j) => (
     <div key={j.id} className={`job ${j.status}`} onClick={() => openPanel(j)}>
-      <strong>{j.scheduled_start ? timeOf(j.scheduled_start) : "No time"}</strong> {j.title}
-      <div>{j.customer.name}</div>
-      <div className="muted">{j.assigned_to ? j.assigned_to.name : "Unassigned"}{j.status !== "assigned" && <span className="badge">{j.status.replace("_", " ")}</span>}</div>
+      <div className="time">{j.scheduled_start ? timeOf(j.scheduled_start) : "No time"}</div>
+      <div className="title">{j.title}</div>
+      <div className="cust">{j.customer.name}</div>
+      <div className="foot">
+        <span className={`avatar ${j.assigned_to ? "" : "none"}`}>{j.assigned_to ? initials(j.assigned_to.name) : "?"}</span>
+        <span>{j.assigned_to ? j.assigned_to.name : "Unassigned"}</span>
+        {j.status !== "assigned" && <span className={`badge ${j.status}`}>{j.status.replace("_", " ")}</span>}
+      </div>
     </div>
   );
 
+  const rangeLabel = `${weekStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${addDays(weekStart, 6).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+
   return (
     <>
-      <h1>Schedule</h1>
+      <div className="pagehead"><h1>Schedule</h1><span className="range">{rangeLabel}</span></div>
       {error && <div className="error">{error}</div>}
-      <div className="row" style={{ marginBottom: ".75rem" }}>
-        <button className="secondary" onClick={() => setWeekStart(addDays(weekStart, -7))}>&larr; Previous</button>
+      <div className="toolbar">
+        <button className="secondary" onClick={() => setWeekStart(addDays(weekStart, -7))}>Previous</button>
         <button className="secondary" onClick={() => setWeekStart(startOfWeek(new Date()))}>This week</button>
-        <button className="secondary" onClick={() => setWeekStart(addDays(weekStart, 7))}>Next &rarr;</button>
+        <button className="secondary" onClick={() => setWeekStart(addDays(weekStart, 7))}>Next</button>
         <select style={{ width: "auto" }} value={techFilter} onChange={(e) => setTechFilter(e.target.value)}>
           <option value="">Everyone</option>
           {techs.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        <button onClick={() => openPanel(null)} disabled={customers.length === 0}>+ New job</button>
+        <button className="spacer" onClick={() => openPanel(null)} disabled={customers.length === 0}>New job</button>
       </div>
       {customers.length === 0 && <div className="warn">Add a customer first (Customers page), then you can create jobs.</div>}
 
@@ -239,15 +247,19 @@ export default function Schedule() {
           const todays = jobs.filter((j) => j.scheduled_start && sameDay(new Date(j.scheduled_start), d));
           return (
             <div key={d.toISOString()} className={`day ${sameDay(d, today) ? "today" : ""}`}>
-              <h3>{dayLabel(d)}</h3>
-              {todays.map(card)}
+              <div className="dayhead">
+                <span className="dow">{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
+                <span className="num">{d.getDate()}</span>
+                <span className="mon">{d.toLocaleDateString("en-GB", { month: "short" })}</span>
+              </div>
+              {todays.length === 0 ? <div className="empty">No jobs</div> : todays.map(card)}
             </div>
           );
         })}
       </div>
 
       <h2>Needs a time</h2>
-      {unscheduled.length === 0 ? <p className="muted">Nothing waiting.</p> : <div className="week" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>{unscheduled.map(card)}</div>}
+      {unscheduled.length === 0 ? <p className="muted">Every job has a time.</p> : <div className="week" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>{unscheduled.map(card)}</div>}
     </>
   );
 }

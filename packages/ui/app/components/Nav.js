@@ -20,20 +20,22 @@ export default function Nav() {
     router.push("/login");
   }
 
+  const on = (href) => (pathname && pathname.startsWith(href) ? "active" : "");
+
   return (
     <nav className="nav">
-      <span className="brand">WebAwesome Scheduler</span>
+      <span className="brand"><span className="mark" aria-hidden="true" />WebAwesome Scheduler</span>
       {session?.role === "admin" && (
         <>
-          <Link href="/schedule">Schedule</Link>
-          <Link href="/customers">Customers</Link>
-          <Link href="/team">Team</Link>
+          <Link href="/schedule" className={on("/schedule")}>Schedule</Link>
+          <Link href="/customers" className={on("/customers")}>Customers</Link>
+          <Link href="/team" className={on("/team")}>Team</Link>
         </>
       )}
-      {session && <Link href="/my-jobs">My jobs</Link>}
+      {session && <Link href="/my-jobs" className={on("/my-jobs")}>My jobs</Link>}
       {session ? (
         <>
-          <span className="muted" style={{ color: "#ccd" }}>{session.name}</span>
+          <span className="who">{session.name}</span>
           <button onClick={signOut}>Sign out</button>
         </>
       ) : (

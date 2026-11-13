@@ -1,3 +1,4 @@
+import "@fontsource-variable/hanken-grotesk";
 import "./globals.css";
 import Nav from "./components/Nav";
 
