@@ -18,7 +18,7 @@ export default function Signup() {
     setError("");
     try {
       const data = await api("/auth/signup", { method: "POST", body: f });
-      saveSession({ token: data.access_token, role: data.role, name: data.name });
+      saveSession({ token: data.access_token, role: data.role, name: data.name, platform_admin: !!data.platform_admin });
       router.push("/schedule");
     } catch (err) {
       setError(err.message);

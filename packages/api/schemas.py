@@ -28,6 +28,7 @@ class TokenOut(BaseModel):
     token_type: str = "bearer"
     role: str
     name: str
+    platform_admin: bool = False
 
 
 class UserOut(BaseModel):
@@ -37,6 +38,7 @@ class UserOut(BaseModel):
     phone: Optional[str] = None
     role: str
     active: bool
+    platform_admin: bool = False
 
 
 class TeamIn(BaseModel):
@@ -130,3 +132,15 @@ class JobOut(BaseModel):
     @field_serializer("scheduled_start", "started_at", "completed_at")
     def _utc(self, v: Optional[datetime]):
         return v.isoformat() + "Z" if v else None
+
+
+# ---------- platform admin ----------
+class OrgSummary(BaseModel):
+    id: int
+    name: str
+    sector: str
+    suspended: bool
+    created_at: datetime
+    users: int
+    customers: int
+    jobs: int

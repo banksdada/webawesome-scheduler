@@ -32,6 +32,7 @@ export default function Nav() {
           <Link href="/team" className={on("/team")}>Team</Link>
         </>
       )}
+      {session?.platform_admin && <Link href="/platform" className={on("/platform")}>Platform</Link>}
       {session && <Link href="/my-jobs" className={on("/my-jobs")}>My jobs</Link>}
       {session ? (
         <>

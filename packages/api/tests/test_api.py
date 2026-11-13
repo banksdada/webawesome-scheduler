@@ -335,3 +335,72 @@ def test_assigning_a_job_texts_the_technician_without_the_address(client, sent, 
     to, body = texts[0]
     assert to == "07000 000000"
     assert "Secret Lane" not in body and "https://jobs.example.com/my-jobs" in body
+
+
+# ------------------------------------------------------------------ platform admin
+def test_only_the_owner_can_use_platform_screens(client, monkeypatch):
+    owner_email, owner = signup(client, org="Owner Co")
+    _, other = signup(client, org="Other Co")
+    monkeypatch.setenv("PLATFORM_ADMIN_EMAILS", f" {owner_email.upper()} ")
+    assert client.get("/platform/orgs", headers=other).status_code == 403
+    assert client.get("/platform/orgs").status_code == 401
+    listing = client.get("/platform/orgs", headers=owner)
+    assert listing.status_code == 200
+    names = {o["name"] for o in listing.json()}
+    assert {"Owner Co", "Other Co"} <= names
+    assert all({"users", "customers", "jobs", "sector", "suspended"} <= set(o) for o in listing.json())
+    assert client.get("/me", headers=owner).json()["platform_admin"] is True
+    assert client.get("/me", headers=other).json()["platform_admin"] is False
+
+
+def test_nobody_is_a_platform_admin_by_default(client, monkeypatch):
+    monkeypatch.delenv("PLATFORM_ADMIN_EMAILS", raising=False)
+    _, admin = signup(client)
+    assert client.get("/platform/orgs", headers=admin).status_code == 403
+
+
+def test_suspending_a_business_locks_everyone_in_it_out(client, monkeypatch):
+    owner_email, owner = signup(client, org="Owner Co")
+    victim_email, victim = signup(client, org="Late Payer Ltd")
+    tid, tech_email = add_tech(client, victim)
+    tech = login(client, tech_email)
+    monkeypatch.setenv("PLATFORM_ADMIN_EMAILS", owner_email)
+    org_id = next(o["id"] for o in client.get("/platform/orgs", headers=owner).json() if o["name"] == "Late Payer Ltd")
+
+    r = client.post(f"/platform/orgs/{org_id}/suspend", headers=owner)
+    assert r.status_code == 200 and r.json()["suspended"] is True
+    assert client.get("/me", headers=victim).status_code == 403
+    assert client.get("/jobs", headers=tech).status_code == 403
+    blocked = client.post("/token", data={"username": victim_email, "password": PASSWORD})
+    assert blocked.status_code == 403 and "suspended" in blocked.json()["detail"]
+    wrong = client.post("/token", data={"username": victim_email, "password": "wrong-password"})
+    assert wrong.status_code == 400  # a wrong password still looks like any other wrong password
+
+    r = client.post(f"/platform/orgs/{org_id}/reactivate", headers=owner)
+    assert r.status_code == 200 and r.json()["suspended"] is False
+    assert client.get("/me", headers=victim).status_code == 200
+
+
+def test_owner_cannot_suspend_their_own_business_or_a_missing_one(client, monkeypatch):
+    owner_email, owner = signup(client, org="Owner Co")
+    monkeypatch.setenv("PLATFORM_ADMIN_EMAILS", owner_email)
+    own_id = next(o["id"] for o in client.get("/platform/orgs", headers=owner).json() if o["name"] == "Owner Co")
+    assert client.post(f"/platform/orgs/{own_id}/suspend", headers=owner).status_code == 400
+    assert client.post("/platform/orgs/999999/suspend", headers=owner).status_code == 404
+
+
+def test_existing_databases_get_the_new_columns():
+    from sqlalchemy import create_engine, inspect, text
+
+    from api.db import upgrade_schema
+
+    old = create_engine("sqlite://")
+    with old.begin() as conn:
+        conn.execute(text("CREATE TABLE organisation (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL, created_at DATETIME)"))
+        conn.execute(text("INSERT INTO organisation (id, name) VALUES (1, 'Existing Co')"))
+    upgrade_schema(old)
+    upgrade_schema(old)  # running it twice must be harmless
+    assert {"sector", "suspended"} <= {c["name"] for c in inspect(old).get_columns("organisation")}
+    with old.begin() as conn:
+        row = conn.execute(text("SELECT sector, suspended FROM organisation WHERE id = 1")).one()
+    assert row[0] == "cleaning" and not row[1]

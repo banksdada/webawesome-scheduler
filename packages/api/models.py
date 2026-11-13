@@ -18,6 +18,8 @@ def utcnow() -> datetime:
 class Organisation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+    sector: str = "cleaning"  # which kind of business this is (decides wording later)
+    suspended: bool = False  # set by the platform admin; blocks everyone in this business
     created_at: datetime = Field(default_factory=utcnow)
 
 

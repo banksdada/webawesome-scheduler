@@ -12,8 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
 from . import models  # noqa: F401  (makes sure the tables are known)
-from .db import engine
-from .routers import auth, customers, jobs, quotes, team
+from .db import engine, upgrade_schema
+from .routers import auth, customers, jobs, platform, quotes, team
 
 # Website address(es) allowed to call this API from a browser, comma separated
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
@@ -22,6 +22,7 @@ CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     SQLModel.metadata.create_all(engine)  # creates missing tables on start-up
+    upgrade_schema()  # adds new columns to tables that already exist
     yield
 
 
@@ -40,3 +41,4 @@ app.include_router(team.router)
 app.include_router(customers.router)
 app.include_router(jobs.router)
 app.include_router(quotes.router)
+app.include_router(platform.router)
