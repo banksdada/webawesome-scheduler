@@ -35,6 +35,7 @@ export default function Login() {
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
       <label>Password</label>
       <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+      <p className="muted forgot"><Link href="/forgot">Forgot your password?</Link></p>
       {error && <div className="error">{error}</div>}
       <p><button disabled={busy}>{busy ? "Logging in..." : "Log in"}</button></p>
       <p className="muted">New business? <Link href="/signup">Create an account</Link></p>

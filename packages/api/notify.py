@@ -37,6 +37,17 @@ def send_email(to: str, subject: str, body: str) -> bool:
         return False
 
 
+def password_reset(email: str, name: str, link: str) -> bool:
+    first = (name or "there").split()[0]
+    body = (
+        f"Hello {first},\n\n"
+        f"Someone asked to choose a new password for your scheduler account. "
+        f"If that was you, open this link within one hour:\n\n{link}\n\n"
+        f"If it wasn't you, ignore this email. Your password stays the same."
+    )
+    return send_email(email, "Choose a new password", body)
+
+
 def normalise_phone(raw: str | None) -> str | None:
     """Turn a number like 07700 900111 into +447700900111 (the form Twilio needs)."""
     if not raw:

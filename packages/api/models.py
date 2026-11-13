@@ -34,6 +34,17 @@ class User(SQLModel, table=True):
     active: bool = True
 
 
+class PasswordReset(SQLModel, table=True):
+    """A one-time link for choosing a new password. Only a fingerprint (hash) of the secret is stored."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    token_hash: str = Field(index=True, unique=True)
+    expires_at: datetime
+    used: bool = False
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class Customer(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(foreign_key="organisation.id", index=True)

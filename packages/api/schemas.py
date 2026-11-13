@@ -23,6 +23,15 @@ class SignupIn(BaseModel):
     password: str = Field(min_length=8, max_length=72)
 
 
+class ForgotIn(BaseModel):
+    email: EmailStr
+
+
+class ResetIn(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    password: str = Field(min_length=8, max_length=72)
+
+
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
