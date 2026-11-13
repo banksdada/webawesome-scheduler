@@ -272,3 +272,36 @@ button.big { display: flex; align-items: center; justify-content: center; gap: .
 .mk-warm h2 { margin-bottom: .6rem; }
 .mk-warm p { color: var(--ink); max-width: 56ch; font-size: 1.05rem; line-height: 1.6; }
 @media (max-width: 800px) { .mk-warm { grid-template-columns: 1fr; padding: 1.5rem; gap: 1.25rem; } .mk-warm .spot { max-width: 240px; } }
+
+/* ---------- card movement ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.job, .jobcard, .stat, .mk-feature, .mk-whocard, .mk-warm, .auth-side, form.card {
+  transition: transform .22s cubic-bezier(.2, .7, .3, 1), box-shadow .22s ease, border-color .22s ease, background-color .22s ease;
+}
+.job { border-radius: 12px; }
+.job:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(22, 36, 43, .10); border-color: #c4cfca; }
+.job:active { transform: translateY(0) scale(.985); box-shadow: none; }
+.stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(22, 36, 43, .08); }
+.jobcard { border-radius: 16px; }
+.jobcard:active { transform: scale(.992); }
+.mk-feature:hover, .mk-whocard:hover { transform: translateY(-3px); }
+.mk-feature:hover .mk-ico, .mk-whocard:hover .mk-ico { transform: scale(1.08) rotate(-4deg); }
+.mk-ico { transition: transform .25s cubic-bezier(.3, 1.4, .5, 1); }
+button, .btn { transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+button:not(:disabled):hover, .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(15, 91, 87, .18); }
+button:not(:disabled):active, .btn:active { transform: translateY(0) scale(.97); box-shadow: none; }
+.nav button:hover, button.secondary:hover { box-shadow: none; }
+.ring circle + circle { transition: stroke-dasharray .8s cubic-bezier(.2, .7, .3, 1); }
+
+/* cards ease in once when a page opens */
+.jobcard, .job, .stat, .daycard { animation: rise .4s cubic-bezier(.2, .7, .3, 1) backwards; }
+.stat:nth-child(2), .jobcard:nth-of-type(2), .day .job:nth-child(3) { animation-delay: .05s; }
+.stat:nth-child(3), .jobcard:nth-of-type(3), .day .job:nth-child(4) { animation-delay: .10s; }
+.stat:nth-child(4), .jobcard:nth-of-type(4), .day .job:nth-child(5) { animation-delay: .15s; }
+.stat:nth-child(5), .jobcard:nth-of-type(5) { animation-delay: .20s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jobcard, .job, .stat, .daycard { animation: none !important; }
+  .job:hover, .stat:hover, .mk-feature:hover, .mk-whocard:hover, button:hover { transform: none !important; }
+}
