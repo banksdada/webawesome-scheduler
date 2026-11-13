@@ -25,7 +25,7 @@ export default function Nav() {
   return (
     <nav className="nav">
       <span className="brand"><span className="mark" aria-hidden="true" />WebAwesome Scheduler</span>
-      {session?.role === "admin" && (
+      {session?.role === "admin" && !session.platform_admin && (
         <>
           <Link href="/schedule" className={on("/schedule")}>Schedule</Link>
           <Link href="/customers" className={on("/customers")}>Customers</Link>
@@ -33,7 +33,7 @@ export default function Nav() {
         </>
       )}
       {session?.platform_admin && <Link href="/platform" className={on("/platform")}>Platform</Link>}
-      {session && <Link href="/my-jobs" className={on("/my-jobs")}>My jobs</Link>}
+      {session && !session.platform_admin && <Link href="/my-jobs" className={on("/my-jobs")}>My jobs</Link>}
       {session ? (
         <>
           <span className="who">{session.name}</span>

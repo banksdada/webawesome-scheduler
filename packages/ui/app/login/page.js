@@ -19,7 +19,7 @@ export default function Login() {
     try {
       const data = await api("/token", { method: "POST", form: { username: email, password } });
       saveSession({ token: data.access_token, role: data.role, name: data.name, platform_admin: !!data.platform_admin });
-      router.push(data.role === "admin" ? "/schedule" : "/my-jobs");
+      router.push(data.platform_admin ? "/platform" : data.role === "admin" ? "/schedule" : "/my-jobs");
     } catch (err) {
       setError(err.message);
       setBusy(false);

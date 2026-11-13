@@ -66,7 +66,7 @@ export default function Home() {
 
   useEffect(() => {
     const s = getSession();
-    if (s) router.replace(s.role === "admin" ? "/schedule" : "/my-jobs");
+    if (s) router.replace(s.platform_admin ? "/platform" : s.role === "admin" ? "/schedule" : "/my-jobs");
     else setReady(true);
   }, [router]);
 
