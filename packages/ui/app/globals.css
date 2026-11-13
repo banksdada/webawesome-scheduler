@@ -305,3 +305,42 @@ button:not(:disabled):active, .btn:active { transform: translateY(0) scale(.97);
   .jobcard, .job, .stat, .daycard { animation: none !important; }
   .job:hover, .stat:hover, .mk-feature:hover, .mk-whocard:hover, button:hover { transform: none !important; }
 }
+
+/* ---------- warmer, deeper look ---------- */
+:root {
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(22, 36, 43, .05), 0 8px 22px rgba(22, 36, 43, .06);
+  --shadow-lift: 0 2px 4px rgba(22, 36, 43, .06), 0 16px 34px rgba(22, 36, 43, .12);
+}
+form.card, .card, .day, .stat, .jobcard, .mk-board { box-shadow: var(--shadow); border-color: transparent; }
+.job { border-color: #e6e9e4; box-shadow: 0 1px 2px rgba(22, 36, 43, .05), 0 3px 10px rgba(22, 36, 43, .05); border-radius: 14px; }
+.job:hover { box-shadow: var(--shadow-lift); border-color: transparent; }
+.day { padding: .7rem; }
+.day.today { box-shadow: 0 0 0 2px var(--spruce), var(--shadow); border-color: transparent; background: #fbfdfc; }
+input, select, textarea { border-radius: 12px; padding: .7rem .85rem; border-color: #d3dad6; }
+button, .btn { border-radius: 12px; padding: .65rem 1.1rem; }
+.nav { box-shadow: 0 1px 0 rgba(22, 36, 43, .04), 0 6px 18px rgba(22, 36, 43, .04); border-bottom-color: transparent; }
+
+/* each person gets their own colour */
+.job .avatar { width: 22px; height: 22px; }
+.avatar.tone-0 { background: #dcefe9; color: #0a4a44; }
+.avatar.tone-1 { background: #fde7b8; color: #7a5300; }
+.avatar.tone-2 { background: #dbe8f8; color: #1f4f86; }
+.avatar.tone-3 { background: #f6dcd6; color: #8a2f22; }
+.avatar.tone-4 { background: #e6e0f3; color: #4c3a86; }
+.avatar.tone-5 { background: #e1ecd2; color: #3b5a1c; }
+
+/* greeting band on the schedule */
+.band { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; background: var(--spruce-deep); color: #fff; border-radius: 24px; padding: 1.6rem 2rem; margin-bottom: 1rem; box-shadow: 0 14px 34px rgba(10, 63, 60, .25); overflow: hidden; position: relative; }
+.band h1 { color: #fff; font-size: clamp(1.6rem, 3.4vw, 2.3rem); letter-spacing: -0.03em; margin: .15rem 0 .35rem; }
+.band p { margin: 0; color: #c3dad7; font-size: 1.05rem; }
+.band-range { display: inline-block; background: rgba(255, 255, 255, .12); color: #e3efed; border-radius: 99px; padding: .2rem .75rem; font-size: .85rem; font-weight: 600; }
+.band .spot-band { width: 128px; flex: none; margin-right: .5rem; }
+@media (max-width: 640px) { .band { padding: 1.2rem 1.25rem; } .band .spot-band { display: none; } }
+
+/* technician greeting */
+.daycard { background: var(--spruce-deep); border-color: transparent; color: #fff; border-radius: 20px; box-shadow: 0 12px 28px rgba(10, 63, 60, .22); padding: 1rem 1.2rem; }
+.daycard strong { color: #fff; font-size: 1.2rem; }
+.daycard span { color: #c3dad7; }
+.daycard .spot { background: transparent; }
+.jobcard { border-radius: 20px; }

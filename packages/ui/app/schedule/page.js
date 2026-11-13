@@ -6,6 +6,8 @@ import {
 } from "../lib/api";
 import { useSession } from "../lib/useSession";
 import Icon from "../components/Icon";
+import Spot from "../components/Spot";
+import { toneFor } from "../lib/tones";
 
 const EMPTY_JOB = { customer_id: "", title: "", notes: "", when: "", duration_minutes: 60, assigned_to_id: "", price_estimate: "" };
 
@@ -219,7 +221,7 @@ export default function Schedule() {
       <div className="title">{j.title}</div>
       <div className="cust">{j.customer.name}</div>
       <div className="foot">
-        <span className={`avatar ${j.assigned_to ? "" : "none"}`}>{j.assigned_to ? initials(j.assigned_to.name) : "?"}</span>
+        <span className={`avatar ${j.assigned_to ? `tone-${toneFor(j.assigned_to.name)}` : "none"}`}>{j.assigned_to ? initials(j.assigned_to.name) : "?"}</span>
         <span>{j.assigned_to ? j.assigned_to.name : "Unassigned"}</span>
         {j.status !== "assigned" && <span className={`badge ${j.status}`}>{j.status.replace("_", " ")}</span>}
       </div>
@@ -230,8 +232,14 @@ export default function Schedule() {
 
   return (
     <>
-      <div className="pagehead"><h1>Schedule</h1><span className="range">{rangeLabel}</span></div>
-      <p className="hello"><strong>{greet}{firstName ? `, ${firstName}` : ""}.</strong> {dayLine}</p>
+      <section className="band">
+        <div className="band-copy">
+          <span className="band-range">{rangeLabel}</span>
+          <h1>{greet}{firstName ? `, ${firstName}` : ""}</h1>
+          <p>{dayLine}</p>
+        </div>
+        <Spot kind="rest" className="spot-band" />
+      </section>
       {error && <div className="error">{error}</div>}
       <div className="stats">
         <div className="stat"><span className="ico spruce"><Icon name="calendar" /></span><div><b>{live.length}</b><span>jobs this week</span></div></div>
@@ -286,7 +294,7 @@ export default function Schedule() {
                 <span className="num">{d.getDate()}</span>
                 <span className="mon">{d.toLocaleDateString("en-GB", { month: "short" })}</span>
               </div>
-              {todays.length === 0 ? <div className="empty">No jobs</div> : todays.map(card)}
+              {todays.length === 0 ? <div className="empty">Free day</div> : todays.map(card)}
             </div>
           );
         })}

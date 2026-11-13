@@ -92,10 +92,10 @@ export default function MyJobs() {
           <Spot kind="rest" className="spot-sm" />
         ) : (
           <svg className="ring" viewBox="0 0 64 64" role="img" aria-label={`${todaysDone} of ${todays.length} done today`}>
-            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--spruce-wash)" strokeWidth="8" />
-            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--moss)" strokeWidth="8" strokeLinecap="round"
+            <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--signal)" strokeWidth="8" strokeLinecap="round"
               strokeDasharray={`${(todaysDone / todays.length) * 163.4} 163.4`} transform="rotate(-90 32 32)" />
-            <text x="32" y="37" textAnchor="middle" fontSize="17" fontWeight="700" fill="var(--ink)">{todaysDone}/{todays.length}</text>
+            <text x="32" y="37" textAnchor="middle" fontSize="17" fontWeight="700" fill="#fff">{todaysDone}/{todays.length}</text>
           </svg>
         )}
         <div>
@@ -110,8 +110,12 @@ export default function MyJobs() {
           {overdue.map((j) => <JobCard key={j.id} job={j} onAction={act} busy={busy} />)}
         </>
       )}
-      <h2>Today</h2>
-      {todays.length === 0 ? null : todays.map((j) => <JobCard key={j.id} job={j} onAction={act} busy={busy} />)}
+      {todays.length > 0 && (
+        <>
+          <h2>Today</h2>
+          {todays.map((j) => <JobCard key={j.id} job={j} onAction={act} busy={busy} />)}
+        </>
+      )}
       <h2>Coming up</h2>
       {upcoming.length === 0 ? <div className="emptyspot"><Spot kind="route" className="spot-sm" /><p className="muted">No upcoming jobs.</p></div> : upcoming.map((j) => <JobCard key={j.id} job={j} onAction={act} busy={busy} />)}
     </div>
