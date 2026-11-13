@@ -1,8 +1,11 @@
-"""Email to technicians. If SMTP_* settings are missing, it only logs (and never crashes a request)."""
+"""Email and text messages to technicians. Missing SMTP_* or TWILIO_* settings only log, and never crash a request."""
 
+import base64
 import logging
 import os
 import smtplib
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from email.message import EmailMessage
 from zoneinfo import ZoneInfo
@@ -34,6 +37,47 @@ def send_email(to: str, subject: str, body: str) -> bool:
         return False
 
 
+def normalise_phone(raw: str | None) -> str | None:
+    """Turn a number like 07700 900111 into +447700900111 (the form Twilio needs)."""
+    if not raw:
+        return None
+    number = "".join(ch for ch in raw if ch.isdigit() or ch == "+")
+    if number.startswith("+"):
+        digits = number[1:]
+    elif number.startswith("00"):
+        digits = number[2:]
+    elif number.startswith("0"):
+        digits = os.getenv("DEFAULT_COUNTRY_CODE", "44") + number[1:]
+    else:
+        digits = number
+    digits = "".join(ch for ch in digits if ch.isdigit())
+    return "+" + digits if 8 <= len(digits) <= 15 else None
+
+
+def send_sms(to: str | None, body: str) -> bool:
+    sid, token, sender = os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"), os.getenv("TWILIO_FROM")
+    if not (sid and token and sender):
+        log.info("Text not sent (TWILIO_* settings not set)")
+        return False
+    number = normalise_phone(to)
+    if not number:
+        log.info("Text not sent (technician has no usable phone number)")
+        return False
+    fields = {"To": number, "Body": body}
+    fields["MessagingServiceSid" if sender.startswith("MG") else "From"] = sender
+    request = urllib.request.Request(
+        f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json",
+        data=urllib.parse.urlencode(fields).encode(),
+        headers={"Authorization": "Basic " + base64.b64encode(f"{sid}:{token}".encode()).decode()},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=15):
+            return True
+    except Exception as err:  # never let a text problem break scheduling
+        log.warning("Text to %s failed: %s", number, err)
+        return False
+
+
 def _local_time(utc_naive: datetime | None) -> str:
     if utc_naive is None:
         return "not scheduled yet"
@@ -56,3 +100,8 @@ def job_assigned(info: dict) -> None:
         f"Open the scheduler on your phone to start and complete the job."
     )
     send_email(info["tech_email"], f"New job: {info['title']}", body)
+    site = os.getenv("SITE_URL", "").rstrip("/")
+    text = f"New job: {info['title']}, {_local_time(info['scheduled_start'])}."
+    if site:
+        text += f" Open it: {site}/my-jobs"
+    send_sms(info.get("tech_phone"), text)

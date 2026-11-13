@@ -278,3 +278,60 @@ def test_quote_escapes_html(client):
 def test_missing_email_settings_never_break_scheduling(client):
     # without SMTP_HOST the real send_email just logs and returns False
     assert notify.send_email("a@example.com", "hi", "body") is False
+
+
+# ------------------------------------------------------------------ text messages
+def test_phone_numbers_are_made_ready_for_twilio():
+    assert notify.normalise_phone("07700 900111") == "+447700900111"
+    assert notify.normalise_phone("+44 7700 900111") == "+447700900111"
+    assert notify.normalise_phone("0044 7700 900111") == "+447700900111"
+    assert notify.normalise_phone("") is None
+    assert notify.normalise_phone("12") is None
+
+
+def test_text_is_skipped_without_twilio_settings(monkeypatch):
+    for key in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM"):
+        monkeypatch.delenv(key, raising=False)
+    assert notify.send_sms("07700 900111", "hello") is False
+
+
+def test_text_goes_to_twilio_and_failures_are_swallowed(monkeypatch):
+    monkeypatch.setenv("TWILIO_ACCOUNT_SID", "ACtest")
+    monkeypatch.setenv("TWILIO_AUTH_TOKEN", "secret")
+    monkeypatch.setenv("TWILIO_FROM", "+441234567890")
+    seen = []
+
+    class Reply:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+    monkeypatch.setattr(notify.urllib.request, "urlopen", lambda req, timeout=0: seen.append(req) or Reply())
+    assert notify.send_sms("07700 900111", "hello") is True
+    req = seen[0]
+    assert "/Accounts/ACtest/Messages.json" in req.full_url
+    assert b"To=%2B447700900111" in req.data and b"From=%2B441234567890" in req.data
+    assert req.headers["Authorization"].startswith("Basic ")
+
+    def boom(req, timeout=0):
+        raise OSError("network down")
+
+    monkeypatch.setattr(notify.urllib.request, "urlopen", boom)
+    assert notify.send_sms("07700 900111", "hello") is False
+
+
+def test_assigning_a_job_texts_the_technician_without_the_address(client, sent, monkeypatch):
+    texts = []
+    monkeypatch.setattr(notify, "send_sms", lambda to, body: texts.append((to, body)) or True)
+    monkeypatch.setenv("SITE_URL", "https://jobs.example.com/")
+    _, admin = signup(client)
+    tid, _ = add_tech(client, admin)
+    cid = add_customer(client, admin, address="9 Secret Lane")
+    r = add_job(client, admin, cid, tech=tid, start="2030-03-04T09:00:00Z")
+    assert r.status_code == 200, r.text
+    assert len(texts) == 1
+    to, body = texts[0]
+    assert to == "07000 000000"
+    assert "Secret Lane" not in body and "https://jobs.example.com/my-jobs" in body

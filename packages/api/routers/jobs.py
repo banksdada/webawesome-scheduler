@@ -93,6 +93,7 @@ def _queue_assignment_email(background: BackgroundTasks, job: models.Job, tech: 
         {
             "tech_name": tech.name,
             "tech_email": tech.email,
+            "tech_phone": tech.phone,
             "title": job.title,
             "scheduled_start": job.scheduled_start,
             "duration_minutes": job.duration_minutes,
