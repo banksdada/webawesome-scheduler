@@ -344,3 +344,5 @@ button, .btn { border-radius: 12px; padding: .65rem 1.1rem; }
 .daycard span { color: #c3dad7; }
 .daycard .spot { background: transparent; }
 .jobcard { border-radius: 20px; }
+.hint { margin: .3rem 0 0; font-size: .82rem; }
+td form.row input { min-width: 160px; }

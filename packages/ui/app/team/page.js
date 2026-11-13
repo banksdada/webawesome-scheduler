@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api, getSession, saveSession } from "../lib/api";
 import { useSession } from "../lib/useSession";
 
 const EMPTY = { name: "", email: "", phone: "", password: "" };
@@ -12,6 +12,7 @@ export default function Team() {
   const [f, setF] = useState(EMPTY);
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
+  const [editing, setEditing] = useState(null); // { id, name }
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   const load = useCallback(async () => {
@@ -50,6 +51,23 @@ export default function Team() {
     }
   }
 
+  async function rename(e) {
+    e.preventDefault();
+    const name = editing.name.trim();
+    if (!name) return;
+    setError("");
+    try {
+      const updated = await api(`/team/${editing.id}`, { method: "PATCH", body: { name } });
+      const me = getSession();
+      // If you renamed yourself, the greeting in the menu changes straight away.
+      if (me && me.name && list.find((m) => m.id === editing.id)?.name === me.name) saveSession({ ...me, name: updated.name });
+      setEditing(null);
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   if (!ready) return null;
   return (
     <>
@@ -57,7 +75,7 @@ export default function Team() {
       <form className="card" onSubmit={add}>
         <h2 style={{ marginTop: 0 }}>Add a technician</h2>
         <div className="grid2">
-          <div><label>Name</label><input value={f.name} onChange={set("name")} required /></div>
+          <div><label>Name</label><input value={f.name} onChange={set("name")} placeholder="For example, Sam Rivera" required /><p className="muted hint">Use their real name. It's how the app greets them.</p></div>
           <div><label>Phone</label><input value={f.phone} onChange={set("phone")} /></div>
           <div><label>Email (their login)</label><input type="email" value={f.email} onChange={set("email")} required /></div>
           <div><label>Password (at least 8 characters)</label><input type="text" value={f.password} onChange={set("password")} required minLength={8} /></div>
@@ -72,10 +90,23 @@ export default function Team() {
           <tbody>
             {list.map((m) => (
               <tr key={m.id} style={{ opacity: m.active ? 1 : 0.5 }}>
-                <td>{m.name}</td>
+                <td>
+                  {editing?.id === m.id ? (
+                    <form className="row" onSubmit={rename}>
+                      <input autoFocus value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} required />
+                      <button>Save</button>
+                      <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancel</button>
+                    </form>
+                  ) : m.name}
+                </td>
                 <td>{m.email}</td>
                 <td>{m.role}</td>
-                <td><button className="secondary" onClick={() => toggle(m)}>{m.active ? "Deactivate" : "Reactivate"}</button></td>
+                <td>
+                  <div className="row">
+                    <button className="secondary" onClick={() => setEditing({ id: m.id, name: m.name })}>Rename</button>
+                    <button className="secondary" onClick={() => toggle(m)}>{m.active ? "Deactivate" : "Reactivate"}</button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
