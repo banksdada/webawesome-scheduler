@@ -6,7 +6,7 @@ import {
 } from "../lib/api";
 import { useSession } from "../lib/useSession";
 
-const EMPTY_JOB = { customer_id: "", title: "", notes: "", when: "", duration_minutes: 60, assigned_to_id: "" };
+const EMPTY_JOB = { customer_id: "", title: "", notes: "", when: "", duration_minutes: 60, assigned_to_id: "", price_estimate: "" };
 
 // A small form used for both "new job" and "edit job".
 function JobForm({ customers, techs, initial, onSave, onCancel, onCancelJob, onQuote, saving, clash, error, isEdit }) {
@@ -51,6 +51,10 @@ function JobForm({ customers, techs, initial, onSave, onCancel, onCancelJob, onQ
         <div>
           <label>Notes for the technician</label>
           <input value={f.notes} onChange={set("notes")} />
+        </div>
+        <div>
+          <label>Price estimate (£)</label>
+          <input type="number" min={0} step="0.01" value={f.price_estimate} onChange={set("price_estimate")} />
         </div>
       </div>
       {error && <div className="error">{error}</div>}
@@ -134,6 +138,7 @@ export default function Schedule() {
       scheduled_start: fromLocalInput(f.when),
       duration_minutes: Number(f.duration_minutes) || 60,
       assigned_to_id: f.assigned_to_id ? Number(f.assigned_to_id) : null,
+      price_estimate: f.price_estimate === "" ? null : Number(f.price_estimate),
       allow_overlap: allowOverlap,
     };
     try {
@@ -184,6 +189,7 @@ export default function Schedule() {
         when: toLocalInput(panel.job.scheduled_start),
         duration_minutes: panel.job.duration_minutes,
         assigned_to_id: panel.job.assigned_to?.id || "",
+        price_estimate: panel.job.price_estimate ?? "",
       }
     : EMPTY_JOB;
 
